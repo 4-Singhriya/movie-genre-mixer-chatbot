@@ -142,3 +142,20 @@ def format_movie_list(movie_list):
         result += "\n"
 
     return result.strip()
+watchlist = []
+
+def add_to_watchlist(movies):
+    added = []
+    for m in movies:
+        if m not in watchlist:
+            watchlist.append(m)
+            added.append(m)
+    return added
+
+def get_watchlist():
+    return watchlist
+
+def delete_from_watchlist(titles):
+    global watchlist
+    watchlist = [t for t in watchlist if t not in titles]
+

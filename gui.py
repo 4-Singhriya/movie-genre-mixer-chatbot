@@ -1,3 +1,4 @@
+
 import customtkinter as ctk
 import tkinter as tk
 import main
@@ -5,26 +6,24 @@ import threading
 import time
 
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("green")  # changed theme for visual appeal
 
 app = ctk.CTk()
-app.geometry("760x740")
+app.geometry("780x770")
 app.title("🎬 Movie Genre Mixer Chatbot")
 
-# Chat Display using standard tk.Text
 chat_display = tk.Text(
     app,
     width=88,
     height=25,
-    bg="#FAF0E6",         # beige background
+    bg="#F5F5DC",  # light beige
     fg="black",
     font=("Arial", 13),
     wrap="word",
-    state="disabled"      # initially read-only
+    state="disabled"
 )
 chat_display.pack(pady=10)
 
-# Enable bot response styling
 chat_display.tag_configure("bot_tag", foreground="#4169E1", font=("Arial", 13, "bold"))
 chat_display.tag_configure("user_tag", foreground="black", font=("Arial", 13, "bold"))
 
@@ -36,8 +35,8 @@ def insert_chat_message(text, tag=None):
 
 insert_chat_message("👋 Welcome to Movie Genre Mixer!\nAsk me for movie suggestions based on your mood or genres like 'sci-fi romance'.\n\n")
 
-# Entry Box
-entry_frame = ctk.CTkFrame(app)
+# Entry
+entry_frame = ctk.CTkFrame(app, fg_color="#2F4F4F")
 entry_frame.pack(pady=5)
 
 entry = ctk.CTkEntry(entry_frame, placeholder_text="Type your message...", width=500)
@@ -53,25 +52,29 @@ def respond():
     user_input = entry.get()
     if not user_input.strip():
         return
-    insert_chat_message(f"You: {user_input}\n")
+    insert_chat_message(f"You: {user_input}\n", "user_tag")
     entry.delete(0, "end")
     insert_chat_message("🤖 Bot is typing")
     app.update()
     show_typing_animation()
     insert_chat_message("\n")
 
-    response, _ = main.chatbot_response(user_input)
+    response, titles = main.chatbot_response(user_input)
     insert_chat_message(f"🤖 Bot: {response}\n\n", "bot_tag")
+
+    # Store last suggested movies for checkbox-based saving
+    global last_titles
+    last_titles = titles
 
 def on_enter_key(event):
     respond()
 
 entry.bind("<Return>", on_enter_key)
 
-send_btn = ctk.CTkButton(entry_frame, text="Send", command=respond)
+send_btn = ctk.CTkButton(entry_frame, text="Send", command=respond, fg_color="#1E90FF")
 send_btn.pack(side="left", padx=10)
 
-# Random Mix Button
+# Random Mix
 def random_mix():
     insert_chat_message("🎲 Mixing random genres...\n")
     app.update()
@@ -81,22 +84,22 @@ def random_mix():
     response = main.format_movie_list(movies)
     insert_chat_message(f"{response}\n\n", "bot_tag")
 
-random_btn = ctk.CTkButton(app, text="🎲 Random Mix", command=random_mix)
+random_btn = ctk.CTkButton(app, text="🎲 Random Mix", command=random_mix, fg_color="#8A2BE2")
 random_btn.pack(pady=5)
 
 # Save to Watchlist
 def save_watchlist():
-    user_input = entry.get()
-    if not user_input.strip():
+    if not last_titles:
+        insert_chat_message("⚠️ No movies to save. Ask for recommendations first.\n\n")
         return
-    msg = main.save_to_watchlist(user_input)
-    insert_chat_message(f"{msg}\n\n")
+    added = main.add_to_watchlist(last_titles)
+    insert_chat_message(f"✅ Saved to watchlist: {', '.join(added)}\n\n")
     entry.delete(0, "end")
 
-save_btn = ctk.CTkButton(app, text="⭐ Save to Watchlist", command=save_watchlist)
+save_btn = ctk.CTkButton(app, text="⭐ Save to Watchlist", command=save_watchlist, fg_color="#FFD700")
 save_btn.pack(pady=5)
 
-# Watchlist checkbox panel
+# Watchlist display + checkbox
 watchlist_checkboxes = []
 checkbox_frame = ctk.CTkFrame(app)
 checkbox_frame.pack(pady=5)
@@ -114,7 +117,7 @@ def show_watchlist():
         watchlist_checkboxes.append((cb, var))
     insert_chat_message("\n")
 
-watchlist_btn = ctk.CTkButton(app, text="📚 Show Watchlist", command=show_watchlist)
+watchlist_btn = ctk.CTkButton(app, text="📚 Show Watchlist", command=show_watchlist, fg_color="#20B2AA")
 watchlist_btn.pack(pady=5)
 
 def delete_selected():
@@ -126,7 +129,10 @@ def delete_selected():
     else:
         insert_chat_message("⚠️ No movies selected for deletion.\n\n")
 
-delete_btn = ctk.CTkButton(app, text="❌ Delete Selected", command=delete_selected)
+delete_btn = ctk.CTkButton(app, text="❌ Delete Selected", command=delete_selected, fg_color="#DC143C")
 delete_btn.pack(pady=5)
+
+# Initialize empty last_titles list
+last_titles = []
 
 app.mainloop()
